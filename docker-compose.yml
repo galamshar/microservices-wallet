@@ -1,0 +1,153 @@
+version: "3.7"
+services:
+  #DB
+  #User DB
+  user-service-db:
+    image: postgres
+    container_name: user-db
+    environment:
+      - POSTGRES_DB=virtualwallet
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    networks:
+      - fullstack-wallet-user
+  #Movements DB
+  movements-service-db:
+    image: postgres
+    container_name: movements-db
+    environment:
+      - POSTGRES_DB=movements
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - 5433:5432
+    expose:
+      - 5433
+    networks:
+      - fullstack-wallet-movements
+  #User Redis
+  user-service-redis:
+    image: redis
+    container_name: transaction-redis
+    ports:
+      - 6379:6379
+    networks:
+      - fullstack-wallet-user
+  #Transaction DB
+  transaction-service-db:
+    image: postgres
+    container_name: transaction-db
+    environment:
+      - POSTGRES_DB=virtualwallet
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - 5434:5432
+    networks:
+      - fullstack-wallet-transaction
+  #transaction Redis
+  transaction-service-redis:
+    image: redis
+    container_name: transactions-redis-client
+    ports:
+      - 6377:6377
+    networks:
+      - fullstack-wallet-transaction
+  ################################################################
+  #Services
+  #Movements Service
+  movements-service:
+    build: "./movements"
+    container_name: movements-service
+    depends_on:
+      - movements-service-db
+    links:
+      - movements-service-db
+    ports:
+      - 9000:9000
+    env_file:
+      - ./internal/movement.env
+    networks:
+      - fullstack-wallet-movements
+      - fullstack-wallet-services
+  #User Service
+  user-service:
+    build: "./user"
+    container_name: user-service
+    depends_on:
+      - user-service-db
+      - user-service-redis
+      - movements-service
+    links:
+      - user-service-db
+      - user-service-redis
+    ports:
+      - 3000:3000
+    env_file:
+      - ./internal/user.env
+    networks:
+      - fullstack-wallet-services
+      - fullstack-wallet-user
+  #Auth Service
+  auth-service:
+    build: "./auth"
+    container_name: auth-service
+    depends_on:
+      - user-service-db
+      - user-service-redis
+      - movements-service
+    links:
+      - user-service
+      - movements-service
+      - user-service-redis
+    ports:
+      - 3001:3001
+    env_file:
+      - ./internal/auth.env
+    networks:
+      - fullstack-wallet-services
+      - fullstack-wallet-user
+  #transaction Service
+  transaction-service:
+    build: "./transactions"
+    container_name: transaction-service
+    depends_on:
+      - transaction-service-db
+      - transaction-service-redis
+      - user-service
+      - movements-service
+    links:
+      - transaction-service-db
+      - transaction-service-redis
+      - user-service
+      - movements-service
+    ports:
+      - 3002:3002
+    env_file:
+      - ./internal/transaction.env
+    networks:
+      - fullstack-wallet-services
+      - fullstack-wallet-transaction
+  webserver:
+    image: nginx:latest
+    container_name: webserver
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/sites-available/default.conf
+    depends_on:
+      - user-service
+      - movements-service
+      - auth-service
+      - transaction-service
+    ports:
+      - 8000:80
+    networks:
+      - fullstack-wallet-services
+networks:
+  fullstack-wallet-services:
+  fullstack-wallet-movements:
+  fullstack-wallet-user:
+  fullstack-wallet-transaction:
