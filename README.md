@@ -44,3 +44,6 @@ REDIS_ADDR=transaction-service-redis:6379
 SECRECT_KEY=YOU_SECRET_KEY
 MOVEMENT_GRPC=movements-service:9000
 USER_GRPC=user-service:9001
+
+Open the terminal in the root directory:
+docker-compose up
