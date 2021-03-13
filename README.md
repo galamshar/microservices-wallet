@@ -5,13 +5,15 @@ Some troubleshootings :
 To deploy :
 Create internal folder in the root directory and create into this files:
 
+```javascript
 movement.env
 DB_HOST=movements-service-db
 DB_USER=postgres
 DB_PASSWORD=mysecretpassword
 DB_NAME=movements
 DB_PORT=5432
-
+```
+```javascript
 user.env
 DB_HOST=user-service-db
 DB_USER=postgres
@@ -23,7 +25,8 @@ SECRECT_KEY=YOU_SECRET_KEY
 MOVEMENT_GRPC=movements-service:9000
 AUTH_GRPC=auth-service:9002
 TRANSACTION_GRPC=transaction-service:9003
-
+```
+```javascript
 auth.env
 DB_HOST=user-service-db
 DB_USER=postgres
@@ -33,7 +36,8 @@ DB_PORT=5432
 REDIS_ADDR=user-service-redis:6379
 SECRECT_KEY=YOU_SECRET_KEY
 MOVEMENT_GRPC=movements-service:9000
-
+```
+```javascript
 transaction.env
 DB_HOST=transaction-service-db
 DB_USER=postgres
@@ -44,6 +48,6 @@ REDIS_ADDR=transaction-service-redis:6379
 SECRECT_KEY=YOU_SECRET_KEY
 MOVEMENT_GRPC=movements-service:9000
 USER_GRPC=user-service:9001
-
+```
 Open the terminal in the root directory:
 docker-compose up
